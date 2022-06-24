@@ -4,10 +4,10 @@ import boto3
 import botocore
 
 
-def s3_get_object(s3_resource, bucket, key):
+def s3_get_object_as_json(s3_resource, bucket, key):
     try:
         _object = s3_resource.Object(bucket, key)
-        return _object.get()
+        return json.loads(_object.get()['Body'].read())
     except botocore.errorfactory.ClientError as e:
         code = e.response['Error']['Code']
         if code == '404' or 'NoSuchKey':
@@ -16,16 +16,23 @@ def s3_get_object(s3_resource, bucket, key):
             raise e
 
 
-def s3_get_object_from_bucket_resource(bucket_resource, key):
+def s3_get_object_from_bucket_resource_as_json(bucket_resource, key):
     try:
         _object = bucket_resource.Object(key)
-        return _object.get()
+        return json.loads(_object.get()['Body'].read())
     except botocore.errorfactory.ClientError as e:
         code = e.response['Error']['Code']
         if code == '404' or 'NoSuchKey':
             return None
         else:
             raise e
+
+
+def s3_put_object_to_bucket_resource(bucket_resource, key, data):
+    try:
+        bucket_resource.put_object(Key=key, Body=json.dumps(data), ContentType='application/json')
+    except botocore.errorfactory.ClientError as e:
+        raise e
 
 
 s3 = boto3.resource('s3',
@@ -49,9 +56,9 @@ s3 = boto3.resource('s3',
 # object = s3_get_object(s3, 'test', 'simple2')
 
 bucket = s3.Bucket("test")
-object = s3_get_object_from_bucket_resource(bucket,'simple')
+json = s3_get_object_from_bucket_resource_as_json(bucket, 'simple')
 
-if object is None:
+if json is None:
     print("Do something..")
 else:
-    print(json.loads(object['Body'].read()))
+    print(json)
