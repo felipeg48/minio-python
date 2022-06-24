@@ -1,0 +1,3 @@
+= Minio Python
+
+Just example of how to use Minio with Python
